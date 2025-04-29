@@ -1,12 +1,13 @@
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useSearchParams } from "react-router";
 
 interface PaginateProps {
   currentPage: number;
   totalPages: number;
   visiblePages?: number;
   limit: number;
+  setPage: (page: number) => void;
+  setLimit: (limit: number) => void;
 }
 
 export default function Paginate({
@@ -14,8 +15,10 @@ export default function Paginate({
   totalPages,
   limit,
   visiblePages = 5,
+  setPage,
+  setLimit,
 }: PaginateProps) {
-  const [searchParams, setSearchParams] = useSearchParams();
+  // const [searchParams, setSearchParams] = useSearchParams();
 
   // Calculate the range of pages to display
   let startPage = Math.max(1, currentPage - Math.floor(visiblePages / 2));
@@ -35,25 +38,24 @@ export default function Paginate({
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       // Use the safer approach that preserves other URL parameters
-      searchParams.set("page", String(currentPage + 1));
-      searchParams.set("limit", limit.toString());
-      setSearchParams(searchParams);
+      setPage(currentPage + 1); // Update the page state
+
+      setLimit(limit); // Update the limit state
     }
   };
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       // Use the safer approach that preserves other URL parameters
-      searchParams.set("page", String(currentPage - 1));
-      searchParams.set("limit", limit.toString());
-      setSearchParams(searchParams);
+
+      setPage(currentPage - 1); // Update the page state
+      setLimit(limit); // Update the limit state
     }
   };
 
   const updatePageParams = (page: number) => {
-    searchParams.set("page", page.toString());
-    searchParams.set("limit", limit.toString());
-    setSearchParams(searchParams);
+    setPage(page); // Update the page state
+    setLimit(limit); // Update the limit state
   };
 
   return (

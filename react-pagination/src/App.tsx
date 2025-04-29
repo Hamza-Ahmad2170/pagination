@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "./lib/utils";
 import Paginate from "./components/paginate-server";
 import { useSearchParams } from "react-router";
+import { useQueryState, parseAsInteger } from "nuqs";
 
 interface Post {
   limit: number;
@@ -27,28 +28,20 @@ export default function App() {
   const [postsData, setPostsData] = useState<Post>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const currentPage = searchParams.get("page")
-    ? Number(searchParams.get("page"))
-    : 1;
-  const limit = searchParams.get("limit")
-    ? Number(searchParams.get("limit"))
-    : 5;
+  const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
+  const [limit, setLimit] = useQueryState(
+    "limit",
+    parseAsInteger.withDefault(5),
+  );
 
   const totalPages = postsData?.total ? Math.ceil(postsData.total / limit) : 0;
-  console.log("outside", searchParams);
 
   const handlePostsPerPageChange = (newLimit: number) => {
     // Preserve other params and update the limit
 
     // Reset to page 1 when changing items per page
-    searchParams.set("page", "1");
-    searchParams.set("limit", newLimit.toString());
-    console.log("inside", searchParams);
-
-    setSearchParams(searchParams);
+    setPage(1);
+    setLimit(newLimit);
   };
 
   useEffect(() => {
@@ -57,7 +50,7 @@ export default function App() {
 
     const fetchData = async () => {
       try {
-        const skip = (currentPage - 1) * limit;
+        const skip = (page - 1) * limit;
         const res = await apiFetch(`posts?limit=${limit}&skip=${skip}`);
         if (!res.ok) throw new Error("Something went wrong");
         const data: Post = await res.json();
@@ -73,7 +66,7 @@ export default function App() {
 
     fetchData();
     return () => controller.abort();
-  }, [limit, currentPage]);
+  }, [limit, page]);
 
   if (error) {
     return (
@@ -116,8 +109,10 @@ export default function App() {
       {/* pagination custom */}
       <Paginate
         totalPages={totalPages}
-        currentPage={currentPage}
+        currentPage={page}
         limit={limit}
+        setPage={setPage}
+        setLimit={setLimit}
       />
     </div>
   );
